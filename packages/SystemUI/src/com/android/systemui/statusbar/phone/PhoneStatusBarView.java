@@ -70,6 +70,12 @@ public class PhoneStatusBarView extends FrameLayout implements Callbacks {
     private final StatusBarContentInsetsProvider mContentInsetsProvider;
     private final StatusBarWindowController mStatusBarWindowController;
 
+    private final int mStatusBarPaddingX;
+    private final int mStatusBarPaddingY;
+    private View mStatusBarContents;
+    private int mStatusbarDefaultPaddingStart;
+    private int mStatusbarDefaultPaddingEnd;
+
     private DarkReceiver mBattery;
     private ClockController mClockController;
     private int mRotationOrientation = -1;
@@ -100,6 +106,10 @@ public class PhoneStatusBarView extends FrameLayout implements Callbacks {
         mCommandQueue = Dependency.get(CommandQueue.class);
         mContentInsetsProvider = Dependency.get(StatusBarContentInsetsProvider.class);
         mStatusBarWindowController = Dependency.get(StatusBarWindowController.class);
+        mStatusBarPaddingX = context.getResources().getDimensionPixelSize(
+                R.dimen.statusbar_burn_in_prevention_padding_x_max);
+        mStatusBarPaddingY = context.getResources().getDimensionPixelSize(
+                R.dimen.statusbar_burn_in_prevention_padding_y_max);
         
         mSbUtils = StatusBarUtils.getInstance(context);
         mSbUtils.setLayoutChangeListener(new StatusBarUtils.LayoutChangeListener() {
@@ -170,6 +180,9 @@ public class PhoneStatusBarView extends FrameLayout implements Callbacks {
         mClockController = new ClockController(getContext(), this);
         mCutoutSpace = findViewById(R.id.cutout_space_view);
         mIsInflated = true;
+        mStatusBarContents = findViewById(R.id.status_bar_contents);
+        mStatusbarDefaultPaddingStart = mStatusBarContents.getPaddingStart();
+        mStatusbarDefaultPaddingEnd = mStatusBarContents.getPaddingEnd();
 
         updateResources();
     }
@@ -430,5 +443,26 @@ public class PhoneStatusBarView extends FrameLayout implements Callbacks {
 
     private void updateWindowHeight() {
         mStatusBarWindowController.refreshStatusBarHeight();
+    }
+
+    /**
+     *  Moves the Status bar to prevent burn in, called if
+     *  config_enableMoveSystemBars is enabled
+     */
+    public final void moveStatusBar() {
+        if (mStatusBarContents == null) {
+            return;
+        }
+
+        int statusBarTransX = (int) ((Math.random() - 0.5f) * mStatusBarPaddingX);
+        int statusBarTransY = (int) ((Math.random() - 0.5f) * mStatusBarPaddingY);
+
+        // Apply translation to StatusBar
+        mStatusBarContents.setTranslationX(statusBarTransX);
+        mStatusBarContents.setTranslationY(statusBarTransY);
+    }
+
+    void setStatusBarContentsForTest(View contents) {
+        mStatusBarContents = contents;
     }
 }
