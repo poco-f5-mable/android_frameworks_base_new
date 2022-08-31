@@ -20,6 +20,7 @@ import static com.android.systemui.media.dagger.MediaModule.QUICK_QS_PANEL;
 import static com.android.systemui.qs.dagger.QSScopeModule.QS_USING_COLLAPSED_LANDSCAPE_MEDIA;
 import static com.android.systemui.qs.dagger.QSScopeModule.QS_USING_MEDIA_PLAYER;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import android.os.Handler;
@@ -43,6 +44,8 @@ import com.android.systemui.statusbar.policy.SplitShadeStateController;
 import com.android.systemui.util.leak.RotationUtils;
 import com.android.systemui.util.settings.SystemSettings;
 import com.android.systemui.tuner.TunerService;
+import com.android.systemui.settings.brightness.BrightnessMirrorHandler;
+import com.android.systemui.settings.brightness.MirrorController;
 
 import kotlinx.coroutines.flow.StateFlow;
 
@@ -64,6 +67,10 @@ public class QuickQSPanelController extends QSPanelControllerBase<QuickQSPanel> 
     
     private final TunerService mTunerService;
 
+    // brightness is visible only in split shade
+    private final QuickQSBrightnessController mBrightnessController;
+    private final BrightnessMirrorHandler mBrightnessMirrorHandler;
+
     @Inject
     QuickQSPanelController(QuickQSPanel view, QSHost qsHost, TunerService tunerService,
             QSCustomizerController qsCustomizerController,
@@ -76,7 +83,9 @@ public class QuickQSPanelController extends QSPanelControllerBase<QuickQSPanel> 
             Provider<QSLongPressEffect> longPressEffectProvider,
             MediaCarouselInteractor mediaCarouselInteractor,
             @Main Handler mainHandler,
-            SystemSettings systemSettings
+            SystemSettings systemSettings,
+            QuickQSBrightnessController quickQSBrightnessController,
+            @Named(QQS_FOOTER) FooterActionsController footerActionsController
     ) {
         super(view, qsHost, qsCustomizerController, usingMediaPlayer, mediaHost, metricsLogger,
                 uiEventLogger, qsLogger, dumpManager, splitShadeStateController,
@@ -84,6 +93,8 @@ public class QuickQSPanelController extends QSPanelControllerBase<QuickQSPanel> 
         mUsingCollapsedLandscapeMediaProvider = usingCollapsedLandscapeMediaProvider;
         mMediaCarouselInteractor = mediaCarouselInteractor;
         mTunerService = tunerService;
+        mBrightnessController = quickQSBrightnessController;
+        mBrightnessMirrorHandler = new BrightnessMirrorHandler(mBrightnessController);
     }
 
     @Override
@@ -92,6 +103,7 @@ public class QuickQSPanelController extends QSPanelControllerBase<QuickQSPanel> 
         updateMediaExpansion();
         mMediaHost.setShowsOnlyActiveMedia(true);
         mMediaHost.init(MediaHierarchyManager.LOCATION_QQS);
+        mBrightnessController.init(mShouldUseSplitNotificationShade);
     }
 
     @Override
@@ -122,16 +134,24 @@ public class QuickQSPanelController extends QSPanelControllerBase<QuickQSPanel> 
         mTunerService.addTunable(mView, QSPanel.QS_TILE_ANIMATION_STYLE);
         mTunerService.addTunable(mView, QSPanel.QS_TILE_ANIMATION_DURATION);
         mTunerService.addTunable(mView, QSPanel.QS_TILE_ANIMATION_INTERPOLATOR);
+        mBrightnessMirrorHandler.onQsPanelAttached();
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
+        mBrightnessMirrorHandler.onQsPanelDettached();
     }
 
     private void setMaxTiles(int parseNumTiles) {
         mView.setMaxTiles(parseNumTiles);
         setTiles();
+    }
+
+    @Override
+    public void refreshAllTiles() {
+        mBrightnessController.checkRestrictionAndSetEnabled();
+        super.refreshAllTiles();
     }
 
     @Override
@@ -141,6 +161,7 @@ public class QuickQSPanelController extends QSPanelControllerBase<QuickQSPanel> 
             setMaxTiles(newMaxTiles);
         }
         updateMediaExpansion();
+        mBrightnessController.refreshVisibility(mShouldUseSplitNotificationShade);
     }
 
     @Override
@@ -161,5 +182,9 @@ public class QuickQSPanelController extends QSPanelControllerBase<QuickQSPanel> 
 
     public int getNumQuickTiles() {
         return mView.getNumQuickTiles();
+    }
+
+    public void setBrightnessMirror(@Nullable MirrorController brightnessMirrorController) {
+        mBrightnessMirrorHandler.setController(brightnessMirrorController);
     }
 }
