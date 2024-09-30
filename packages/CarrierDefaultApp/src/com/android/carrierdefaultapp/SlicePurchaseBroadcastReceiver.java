@@ -292,7 +292,12 @@ public class SlicePurchaseBroadcastReceiver extends BroadcastReceiver{
 
     @Override
     public void onReceive(@NonNull Context context, @NonNull Intent intent) {
-        logd("onReceive intent: " + intent.getAction());
+        final String action = intent.getAction();
+        logd("onReceive intent: " + action);
+        if (action == null) {
+            return;
+        }
+
         switch (intent.getAction()) {
             case Intent.ACTION_LOCALE_CHANGED:
                 onLocaleChanged(context);
@@ -307,7 +312,7 @@ public class SlicePurchaseBroadcastReceiver extends BroadcastReceiver{
                 onUserCanceled(context, intent);
                 break;
             default:
-                loge("Received unknown action: " + intent.getAction());
+                loge("Received unknown action: " + action);
         }
     }
 
