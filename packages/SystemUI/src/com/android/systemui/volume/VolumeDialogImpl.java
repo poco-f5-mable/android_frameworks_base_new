@@ -438,6 +438,12 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
                             "volume_sound_haptics", 0) != 0;
                     mVolumeUtils.setSoundsHapticsEnabled(soundHapticsEnabled);
                 }
+                if (uri == null || uri.equals(Settings.System.getUriFor("volume_slider_haptics_intensity"))) {
+                    final int hapticsIntensity = Settings.System.getInt(
+                            mContext.getContentResolver(),
+                            "volume_slider_haptics_intensity", 0);
+                    mVolumeUtils.setVolHapticsIntensity(hapticsIntensity);
+                }
             }
         };
         mContext.getContentResolver().registerContentObserver(
@@ -445,6 +451,9 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
                 false, mVolumeDialogImplObserver);
         mContext.getContentResolver().registerContentObserver(
                 Settings.System.getUriFor("volume_sound_haptics"),
+                false, mVolumeDialogImplObserver);
+        mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor("volume_slider_haptics_intensity"),
                 false, mVolumeDialogImplObserver);
         mVolumeDialogImplObserver.onChange(true, null);
 
@@ -1049,10 +1058,12 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
     }
 
     private void addSliderHapticsToRow(VolumeRow row) {
+        /*
         if (hapticVolumeSlider()) {
             row.createPlugin(mVibratorHelper, mSystemClock);
             HapticSliderViewBinder.bind(row.slider, row.mHapticPlugin);
         }
+        */
     }
 
     @VisibleForTesting void addSliderHapticsToRows() {
@@ -2230,7 +2241,11 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
         if (row.tracking) {
             return;  // don't update if user is sliding
         }
+        final int maxVolume = row.ss.levelMax;
         final int progress = row.slider.getProgress();
+        if (mShowing) {
+            mVolumeUtils.performVolumeHaptics(progress, maxVolume);
+        }
         final int level = getVolumeFromProgress(row.ss, row.slider, progress);
         final boolean rowVisible = row.view.getVisibility() == VISIBLE;
         final boolean inGracePeriod = (SystemClock.uptimeMillis() - row.userAttempt)
@@ -2716,6 +2731,11 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
                     Events.writeEvent(Events.EVENT_TOUCH_LEVEL_CHANGED, mRow.stream,
                             userLevel);
                 }
+            }
+            if (mShowing) {
+                final int mRowMaxVolume = mRow.ss.levelMax;
+                final int mRowProgress = mRow.slider.getProgress();
+                mVolumeUtils.performVolumeHaptics(mRowProgress, mRowMaxVolume);
             }
         }
 
