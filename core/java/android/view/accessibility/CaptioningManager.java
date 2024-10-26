@@ -73,7 +73,7 @@ public class CaptioningManager {
         mAccessibilityManager = mContext.getSystemService(AccessibilityManager.class);
 
         final Handler handler = new Handler(context.getMainLooper());
-        mContentObserver = new MyContentObserver(handler);
+        mContentObserver = new MyContentObserver(null);
         mResources = context.getResources();
     }
 
