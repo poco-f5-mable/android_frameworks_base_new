@@ -97,7 +97,7 @@ class MenuInfoRepository {
 
     @VisibleForTesting
     final ContentObserver mMenuTargetFeaturesContentObserver =
-            new ContentObserver(mHandler) {
+            new ContentObserver(null) {
                 @Override
                 public void onChange(boolean selfChange) {
                     onTargetFeaturesChanged();
@@ -106,7 +106,7 @@ class MenuInfoRepository {
 
     @VisibleForTesting
     final ContentObserver mMenuSizeContentObserver =
-            new ContentObserver(mHandler) {
+            new ContentObserver(null) {
                 @Override
                 public void onChange(boolean selfChange) {
                     mSettingsContentsCallback.onSizeTypeChanged(
@@ -116,7 +116,7 @@ class MenuInfoRepository {
 
     @VisibleForTesting
     final ContentObserver mMenuFadeOutContentObserver =
-            new ContentObserver(mHandler) {
+            new ContentObserver(null) {
                 @Override
                 public void onChange(boolean selfChange) {
                     mSettingsContentsCallback.onFadeEffectInfoChanged(getMenuFadeEffectInfo());
