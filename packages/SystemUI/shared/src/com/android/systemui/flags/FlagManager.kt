@@ -157,7 +157,7 @@ class FlagManager constructor(
         return "$SETTINGS_PREFIX/$name"
     }
 
-    inner class SettingsObserver : ContentObserver(handler) {
+    inner class SettingsObserver : ContentObserver(null) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
             if (uri == null) {
                 return
