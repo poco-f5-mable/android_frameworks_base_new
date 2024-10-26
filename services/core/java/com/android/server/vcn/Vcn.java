@@ -217,7 +217,7 @@ public class Vcn extends Handler {
         mDeps = Objects.requireNonNull(deps, "Missing deps");
         mRequestListener = new VcnNetworkRequestListener();
         mContentResolver = mDeps.newVcnContentResolver(mVcnContext);
-        mMobileDataSettingsObserver = new VcnMobileDataContentObserver(this /* handler */);
+        mMobileDataSettingsObserver = new VcnMobileDataContentObserver(null);
 
         final Uri uri = Settings.Global.getUriFor(Settings.Global.MOBILE_DATA);
         mContentResolver.registerContentObserver(
