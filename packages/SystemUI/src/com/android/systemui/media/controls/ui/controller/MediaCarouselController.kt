@@ -215,7 +215,7 @@ constructor(
     private var carouselLocale: Locale? = null
 
     private val animationScaleObserver: ContentObserver =
-        object : ContentObserver(executor, 0) {
+        object : ContentObserver(null) {
             override fun onChange(selfChange: Boolean) {
                 if (!mediaFlags.isSceneContainerEnabled()) {
                     MediaPlayerData.players().forEach { it.updateAnimatorDurationScale() }
