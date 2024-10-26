@@ -487,7 +487,7 @@ public abstract class CursorTreeAdapter extends BaseExpandableListAdapter implem
         
         private class MyContentObserver extends ContentObserver {
             public MyContentObserver() {
-                super(mHandler);
+                super(null);
             }
 
             @Override
