@@ -43,7 +43,7 @@ class SecureLockscreenQSDisabler @Inject constructor(
     private var disableQSOnSecureLockscreen: Boolean = shouldDisableQS()
 
     init {
-        val settingsObserver = object: ContentObserver(handler) {
+        val settingsObserver = object: ContentObserver(null) {
             override fun onChange(selfChange: Boolean) {
                 disableQSOnSecureLockscreen = shouldDisableQS()
                 recomputeDisableFlags()
