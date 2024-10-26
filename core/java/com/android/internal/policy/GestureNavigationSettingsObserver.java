@@ -40,7 +40,7 @@ public class GestureNavigationSettingsObserver extends ContentObserver {
 
     public GestureNavigationSettingsObserver(
             Handler mainHandler, Handler bgHandler, Context context, Runnable onChangeRunnable) {
-        super(mainHandler);
+        super(null);
         mMainHandler = mainHandler;
         mBgHandler = bgHandler;
         mContext = context;
