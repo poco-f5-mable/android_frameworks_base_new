@@ -62,7 +62,6 @@ import javax.inject.Inject;
 /**
  * @deprecated Don't use this class to listen to Secure Settings. Use {@code SecureSettings} instead
  * or {@code SettingsObserver} to be able to specify the handler.
- * This class will interact with SecureSettings using the main looper.
  */
 @Deprecated
 @SysUISingleton
@@ -458,7 +457,7 @@ public class TunerServiceImpl extends TunerService {
 
     private class Observer extends ContentObserver {
         public Observer() {
-            super(new Handler(Looper.getMainLooper()));
+            super(null);
         }
 
         @Override
