@@ -70,7 +70,7 @@ public class FadingBlockRenderer extends Renderer {
     public FadingBlockRenderer(Context context, Handler handler, PulseView view,
             PulseControllerImpl controller, ColorController colorController) {
         super(context, handler, view, colorController);
-        mObserver = new LegacySettingsObserver(handler);
+        mObserver = new LegacySettingsObserver(null);
         mPaint = new Paint();
         mFadePaint = new Paint();
         mFadePaint.setColor(Color.argb(200, 255, 255, 255));
