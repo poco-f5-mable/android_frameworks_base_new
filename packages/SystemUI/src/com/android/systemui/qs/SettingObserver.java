@@ -40,12 +40,12 @@ public abstract class SettingObserver extends ContentObserver implements Listena
     protected abstract void handleValueChanged(int value, boolean observedChange);
 
     public SettingObserver(SettingsProxy settingsProxy, Handler handler, String settingName) {
-        this(settingsProxy, handler, settingName, 0);
+        this(settingsProxy, null, settingName, 0);
     }
 
     public SettingObserver(SettingsProxy settingsProxy, Handler handler, String settingName,
             int defaultValue) {
-        super(handler);
+        super(null);
         mSettingsProxy = settingsProxy;
         mSettingName = settingName;
         mObservedValue = mDefaultValue = defaultValue;
