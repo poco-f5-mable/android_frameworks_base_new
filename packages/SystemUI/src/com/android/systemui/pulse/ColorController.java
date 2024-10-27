@@ -57,7 +57,7 @@ public class ColorController extends ContentObserver
             Context context,
             Handler handler,
             ConfigurationController configurationController) {
-        super(handler);
+        super(null);
         mContext = context;
         mLavaLamp = new ColorAnimator();
         mLavaLamp.setColorAnimatorListener(this);
