@@ -106,7 +106,7 @@ constructor(
     private val onSensitiveStateChangedListener = Runnable { dirtyListeners.forEach(Runnable::run) }
 
     private val settingsObserver =
-        object : ContentObserver(handler) {
+        object : ContentObserver(null) {
             override fun onChange(selfChange: Boolean) {
                 updateSnoozeEnabled()
                 dirtyListeners.forEach(Runnable::run)
