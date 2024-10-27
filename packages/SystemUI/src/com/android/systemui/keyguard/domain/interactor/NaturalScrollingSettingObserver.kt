@@ -44,7 +44,7 @@ constructor(
 
     private var isInitialized = false
 
-    private val contentObserver = object : ContentObserver(handler) {
+    private val contentObserver = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean) {
             update()
         }
