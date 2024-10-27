@@ -243,7 +243,7 @@ constructor(
         }
     }
 
-    private val settingsObserver = object : ContentObserver(handler) {
+    private val settingsObserver = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
             execution.assertIsMainThread()
             reloadSmartspace()
