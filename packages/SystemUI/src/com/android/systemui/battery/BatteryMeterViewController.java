@@ -171,7 +171,7 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
             mView.setVisibility(View.GONE);
         }
 
-        mSettingObserver = new SettingObserver(mMainHandler);
+        mSettingObserver = new SettingObserver(null);
     }
 
     @Override
