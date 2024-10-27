@@ -78,7 +78,7 @@ private fun SecureSettings.watch(
     registerContentObserverForUserSync(
         key,
         false /* notifyForDescendants */,
-        object : ContentObserver(handler) {
+        object : ContentObserver(null) {
             override fun onChange(selfChange: Boolean) = onChange(fetch())
         },
         userId
