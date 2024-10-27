@@ -51,7 +51,7 @@ class DeviceActivityMonitorImpl implements DeviceActivityMonitor {
         // The way this "detects" a flight concluding is by the user explicitly turning off airplane
         // mode. Smarter heuristics would be nice.
         ContentResolver contentResolver = context.getContentResolver();
-        ContentObserver airplaneModeObserver = new ContentObserver(handler) {
+        ContentObserver airplaneModeObserver = new ContentObserver(null) {
             @Override
             public void onChange(boolean unused) {
                 try {
