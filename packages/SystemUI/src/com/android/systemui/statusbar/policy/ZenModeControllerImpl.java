@@ -117,7 +117,7 @@ public class ZenModeControllerImpl implements ZenModeController, Dumpable {
         mUserTracker = userTracker;
         mGlobalSettings = globalSettings;
 
-        ContentObserver modeContentObserver = new ContentObserver(handler) {
+        ContentObserver modeContentObserver = new ContentObserver(null) {
             @Override
             public void onChange(boolean selfChange) {
                 int value = getModeSettingValueFromProvider();
@@ -126,7 +126,7 @@ public class ZenModeControllerImpl implements ZenModeController, Dumpable {
                 fireZenChanged(value);
             }
         };
-        ContentObserver configContentObserver = new ContentObserver(handler) {
+        ContentObserver configContentObserver = new ContentObserver(null) {
             @Override
             public void onChange(boolean selfChange) {
                 try {
