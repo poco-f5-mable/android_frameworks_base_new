@@ -600,7 +600,7 @@ constructor(
         }
 
         val settingsObserver: ContentObserver =
-            object : ContentObserver(handler) {
+            object : ContentObserver(null) {
                 override fun onChange(selfChange: Boolean, uri: Uri?) {
                     if (uri == lockScreenMediaPlayerUri) {
                         allowMediaPlayerOnLockScreen =
