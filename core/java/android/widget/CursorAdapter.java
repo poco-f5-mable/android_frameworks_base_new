@@ -494,7 +494,7 @@ public abstract class CursorAdapter extends BaseAdapter implements Filterable,
 
     private class ChangeObserver extends ContentObserver {
         public ChangeObserver() {
-            super(new Handler());
+            super(null);
         }
 
         @Override
