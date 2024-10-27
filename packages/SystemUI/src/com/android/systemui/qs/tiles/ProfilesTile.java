@@ -117,7 +117,7 @@ public class ProfilesTile extends QSTileImpl<State> {
         mKeyguardStateController = keyguardStateController;
         mProfileManager = ProfileManager.getInstance(mContext);
         mAdapter = new ProfileAdapter();
-        mObserver = new ProfilesObserver(mHandler);
+        mObserver = new ProfilesObserver(null);
     }
 
     @Override
