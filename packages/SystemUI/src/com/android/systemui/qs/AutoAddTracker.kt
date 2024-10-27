@@ -75,7 +75,7 @@ constructor(
         get() = userId
 
     private val contentObserver =
-        object : ContentObserver(mainHandler) {
+        object : ContentObserver(null) {
             override fun onChange(
                 selfChange: Boolean,
                 uris: Collection<Uri>,
