@@ -74,7 +74,7 @@ constructor(
     private val configuration: Configuration = Configuration(context.resources.configuration)
 
     private val fontSizeObserver =
-        object : ContentObserver(mainHandler) {
+        object : ContentObserver(null) {
             override fun onChange(selfChange: Boolean) {
                 lastUpdateTime = systemClock.elapsedRealtime()
             }
