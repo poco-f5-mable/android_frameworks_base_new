@@ -116,7 +116,7 @@ class ActiveUnlockConfig @Inject constructor(
     private var wakeupsConsideredUnlockIntents = mutableSetOf<Int>()
     private var wakeupsToForceDismissKeyguard = mutableSetOf<Int>()
 
-    private val settingsObserver = object : ContentObserver(handler) {
+    private val settingsObserver = object : ContentObserver(null) {
         private val wakeUri = secureSettings.getUriFor(ACTIVE_UNLOCK_ON_WAKE)
         private val unlockIntentLegacyUri =
             secureSettings.getUriFor(ACTIVE_UNLOCK_ON_UNLOCK_INTENT_LEGACY)
