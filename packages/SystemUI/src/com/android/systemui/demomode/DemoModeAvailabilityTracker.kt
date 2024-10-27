@@ -67,7 +67,7 @@ abstract class DemoModeAvailabilityTracker(
         return globalSettings.getInt(DEMO_MODE_ON, 0) != 0
     }
 
-    private val allowedObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+    private val allowedObserver = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean) {
             val allowed = checkIsDemoModeAllowed()
             if (DEBUG) {
