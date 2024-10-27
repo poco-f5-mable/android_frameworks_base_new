@@ -57,7 +57,7 @@ public class ReduceBrightColorsControllerImpl implements
         mUserTracker = userTracker;
         mHandler = handler;
         mSecureSettings = secureSettings;
-        mContentObserver = new ContentObserver(mHandler) {
+        mContentObserver = new ContentObserver(null) {
             @Override
             public void onChange(boolean selfChange, Uri uri) {
                 super.onChange(selfChange, uri);
