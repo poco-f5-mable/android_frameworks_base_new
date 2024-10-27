@@ -68,7 +68,7 @@ public class SolidLineRenderer extends Renderer {
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mDbFuzzFactor = 5;
-        mObserver = new CMRendererObserver(handler);
+        mObserver = new CMRendererObserver(null);
         mObserver.updateSettings();
         loadValueAnimators();
     }
