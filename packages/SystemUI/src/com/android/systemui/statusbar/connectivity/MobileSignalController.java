@@ -151,7 +151,7 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
         mLastState.networkNameData = mCurrentState.networkNameData = networkName;
         mLastState.enabled = mCurrentState.enabled = hasMobileData;
         mLastState.iconGroup = mCurrentState.iconGroup = mDefaultIcons;
-        mObserver = new ContentObserver(new Handler(receiverLooper)) {
+        mObserver = new ContentObserver(null) {
             @Override
             public void onChange(boolean selfChange) {
                 updateTelephony();
