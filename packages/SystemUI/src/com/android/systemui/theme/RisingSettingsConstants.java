@@ -22,10 +22,16 @@ public class RisingSettingsConstants {
     public static final String VOLUME_STYLE = "custom_volume_styles";
     public static final String STATUSBAR_CLOCK_CHIP = Settings.System.STATUSBAR_CLOCK_CHIP;
     public static final String QS_PANEL_TILE_HAPTIC = "qs_panel_tile_haptic";
+    public static final String LEFT_PADDING = "statusbar_left_padding";
+    public static final String RIGHT_PADDING = "statusbar_right_padding";
+    public static final String TOP_PADDING = "statusbar_top_padding";
 
     public static final String[] SYSTEM_SETTINGS_KEYS = {
         STATUSBAR_CLOCK_CHIP,
-        QS_PANEL_TILE_HAPTIC
+        QS_PANEL_TILE_HAPTIC,
+        LEFT_PADDING,
+        RIGHT_PADDING,
+        TOP_PADDING
     };
     
     public static final String[] SECURE_SETTINGS_KEYS = {
