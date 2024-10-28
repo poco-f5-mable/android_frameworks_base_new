@@ -40,7 +40,7 @@ import androidx.annotation.WorkerThread;
 import com.android.internal.util.ArrayUtils;
 import com.android.systemui.DejankUtils;
 import com.android.systemui.dagger.SysUISingleton;
-import com.android.systemui.dagger.qualifiers.Main;
+import com.android.systemui.dagger.qualifiers.Background;
 import com.android.systemui.demomode.DemoModeController;
 import com.android.systemui.qs.QSHost;
 import com.android.systemui.res.R;
@@ -48,6 +48,9 @@ import com.android.systemui.settings.UserTracker;
 import com.android.systemui.statusbar.phone.SystemUIDialog;
 import com.android.systemui.statusbar.phone.ui.StatusBarIconController;
 import com.android.systemui.util.leak.LeakDetector;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import dagger.Lazy;
 
@@ -99,13 +102,14 @@ public class TunerServiceImpl extends TunerService {
     private UserTracker.Callback mCurrentUserTracker;
     private UserTracker mUserTracker;
     private final ComponentName mTunerComponent;
+    private final @Background Executor mBackgroundExecutor;
 
     /**
      */
     @Inject
     public TunerServiceImpl(
             Context context,
-            @Main Handler mainHandler,
+            @Background Handler bgHandler,
             LeakDetector leakDetector,
             DemoModeController demoModeController,
             UserTracker userTracker,
@@ -118,11 +122,13 @@ public class TunerServiceImpl extends TunerService {
         mDemoModeController = demoModeController;
         mUserTracker = userTracker;
         mTunerComponent = new ComponentName(mContext, TunerActivity.class);
+        
+        mBackgroundExecutor = Executors.newSingleThreadExecutor();
 
         for (UserInfo user : UserManager.get(mContext).getUsers()) {
             mCurrentUser = user.getUserHandle().getIdentifier();
             if (getValue(TUNER_VERSION, 0) != CURRENT_TUNER_VERSION) {
-                upgradeTuner(getValue(TUNER_VERSION, 0), CURRENT_TUNER_VERSION, mainHandler);
+                upgradeTuner(getValue(TUNER_VERSION, 0), CURRENT_TUNER_VERSION, bgHandler);
             }
         }
 
@@ -136,7 +142,7 @@ public class TunerServiceImpl extends TunerService {
             }
         };
         mUserTracker.addCallback(mCurrentUserTracker,
-                new HandlerExecutor(mainHandler));
+                new HandlerExecutor(bgHandler));
     }
 
     @Override
@@ -144,7 +150,7 @@ public class TunerServiceImpl extends TunerService {
         mUserTracker.removeCallback(mCurrentUserTracker);
     }
 
-    private void upgradeTuner(int oldVersion, int newVersion, Handler mainHandler) {
+    private void upgradeTuner(int oldVersion, int newVersion, Handler bgHandler) {
         if (oldVersion < 1) {
             String hideListStr = getValue(StatusBarIconController.ICON_HIDE_LIST);
             if (hideListStr != null) {
@@ -166,7 +172,7 @@ public class TunerServiceImpl extends TunerService {
         if (oldVersion < 4) {
             // Delay this so that we can wait for everything to be registered first.
             final int user = mCurrentUser;
-            mainHandler.postDelayed(
+            bgHandler.postDelayed(
                     () -> clearAllFromUser(user), 5000);
         }
         setValue(TUNER_VERSION, newVersion);
@@ -457,7 +463,7 @@ public class TunerServiceImpl extends TunerService {
 
     private class Observer extends ContentObserver {
         public Observer() {
-            super(null);
+            super(mBackgroundExecutor, 0);
         }
 
         @Override
