@@ -44,6 +44,14 @@ public class RisingThemeController {
         observeSettingsKeys(RisingSettingsConstants.SECURE_SETTINGS_KEYS, reevaluateSystemThemeCallback, false);
         observeSettingsKeys(RisingSettingsConstants.SYSTEM_SETTINGS_NOTIFY_ONLY_KEYS, null, true);
         observeSettingsKeys(RisingSettingsConstants.SECURE_SETTINGS_NOTIFY_ONLY_KEYS, null, false);
+        observeRestartKey();
+    }
+    
+    private void observeRestartKey() {
+        Uri restartUri = Settings.System.getUriFor("system_ui_restart");
+        observe(restartUri, () -> {
+            android.os.Process.killProcess(android.os.Process.myPid());
+        });
     }
 
     private void observeSettingsKeys(String[] keys, Runnable reevaluateSystemThemeCallback, boolean isSystem) {
