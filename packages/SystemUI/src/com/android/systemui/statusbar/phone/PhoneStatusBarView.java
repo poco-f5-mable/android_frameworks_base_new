@@ -113,13 +113,7 @@ public class PhoneStatusBarView extends FrameLayout implements Callbacks {
         mStatusBarPaddingY = context.getResources().getDimensionPixelSize(
                 R.dimen.statusbar_burn_in_prevention_padding_y_max);
         
-        mSbUtils = StatusBarUtils.getInstance(context);
-        mSbUtils.setLayoutChangeListener(new StatusBarUtils.LayoutChangeListener() {
-            @Override
-            public void onLayoutChanged(int leftPadding, int rightPadding, int topPadding) {
-                updateStatusBarHeight();
-            }
-        });
+        mSbUtils = new StatusBarUtils(context);
 
         // Only create FRB here if there is no navbar
         if (!hasNavigationBar()) {
@@ -205,9 +199,6 @@ public class PhoneStatusBarView extends FrameLayout implements Callbacks {
         if (mRotationButtonController != null && !hasNavigationBar()) {
             mCommandQueue.addCallback(this);
         }
-        if (mSbUtils != null) {
-            mSbUtils.addListeners();
-        }
     }
 
     @Override
@@ -219,9 +210,6 @@ public class PhoneStatusBarView extends FrameLayout implements Callbacks {
 
         if (mRotationButtonController != null) {
             mCommandQueue.removeCallback(this);
-        }
-        if (mSbUtils != null) {
-            mSbUtils.removeListeners();
         }
     }
 

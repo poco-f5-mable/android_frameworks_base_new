@@ -20,56 +20,25 @@ import android.content.res.Resources;
 import android.provider.Settings;
 import android.util.TypedValue;
 
-import com.android.systemui.res.R;
-import com.android.systemui.Dependency;
-import com.android.systemui.tuner.TunerService;
-
 public class StatusBarUtils {
 
-    public static final String LEFT_PADDING = "system:" + "statusbar_left_padding";
-    public static final String RIGHT_PADDING = "system:" + "statusbar_right_padding";
-    public static final String TOP_PADDING = "system:" + "statusbar_top_padding";
-    public static final String DEFAULT = "_default";
+    public static final String LEFT_PADDING = "statusbar_left_padding";
+    public static final String RIGHT_PADDING = "statusbar_right_padding";
+    public static final String TOP_PADDING = "statusbar_top_padding";
 
     private int mLeftPad;
     private int mRightPad;
     private int mTopPad;
-    
+
     private Context mContext;
     private Resources mRes;
 
-    private LayoutChangeListener mListener;
-    private TunerService mTunerService;
-
-    public interface LayoutChangeListener {
-        void onLayoutChanged(int leftPadding, int rightPadding, int topPadding);
-    }
-
     private static StatusBarUtils sInstance;
-    
-    private StatusBarUtils(Context context) {
+
+    public StatusBarUtils(Context context) {
         mContext = context;
         mRes = mContext.getResources();
-
-        mTunerService = Dependency.get(TunerService.class);
-
-        String leftPaddingKey = LEFT_PADDING.substring(7);
-        String rightPaddingKey = RIGHT_PADDING.substring(7);
-        String topPaddingKey = TOP_PADDING.substring(7);
-    }
-
-    public static synchronized StatusBarUtils getInstance(Context context) {
-        if (sInstance == null) {
-            sInstance = new StatusBarUtils(context.getApplicationContext());
-        }
-        return sInstance;
-    }
-
-    public void setLayoutChangeListener(LayoutChangeListener listener) {
-        mListener = listener;
-        if (mListener != null) {
-            mListener.onLayoutChanged(mLeftPad, mRightPad, mTopPad);
-        }
+        loadPaddingFromSettings();
     }
 
     public int getLeftPadding() {
@@ -83,23 +52,12 @@ public class StatusBarUtils {
     public int getTopPadding() {
         return mTopPad;
     }
-
-    public void updatePadding(String key, float newValue) {
-        int padding = Math.round(TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_DIP,
-                        newValue,
-                        mRes.getDisplayMetrics()));
-        switch (key) {
-            case LEFT_PADDING:
-                mLeftPad = padding;
-                break;
-            case RIGHT_PADDING:
-                mRightPad = padding;
-                break;
-            case TOP_PADDING:
-                mTopPad = padding;
-                break;
-        }
+    
+    private int convertToDip(int padding) {
+        return Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                padding,
+                mRes.getDisplayMetrics()));
     }
 
     public int getDefaultLeftPadding() {
@@ -113,43 +71,10 @@ public class StatusBarUtils {
     public int getDefaultTopPadding() {
         return mRes.getDimensionPixelSize(com.android.internal.R.dimen.status_bar_padding_top);
     }
-    
-    private void notifyChange() {
-        if (mListener != null) {
-            mListener.onLayoutChanged(mLeftPad, mRightPad, mTopPad);
-        }
-    }
-    
-    public void addListeners() {
-        mTunerService.addTunable(mTunable, LEFT_PADDING, RIGHT_PADDING, TOP_PADDING);
-    }
-    
-    public void removeListeners() {
-        mTunerService.removeTunable(mTunable);
-    }
 
-    private final TunerService.Tunable mTunable = new TunerService.Tunable() {
-        @Override
-        public void onTuningChanged(String key, String newValue) {
-            switch (key) {
-                case LEFT_PADDING:
-                    float leftPadding = (float) TunerService.parseInteger(newValue, getDefaultLeftPadding());
-                    updatePadding(key, leftPadding);
-                    notifyChange();
-                    break;
-                case RIGHT_PADDING:
-                    float rightPadding = (float) TunerService.parseInteger(newValue, getDefaultRightPadding());
-                    updatePadding(key, rightPadding);
-                    notifyChange();
-                    break;
-                case TOP_PADDING:
-                    float topPadding = (float) TunerService.parseInteger(newValue, getDefaultTopPadding());
-                    updatePadding(key, topPadding);
-                    notifyChange();
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
+    private void loadPaddingFromSettings() {
+        mLeftPad = convertToDip(Settings.System.getInt(mContext.getContentResolver(), LEFT_PADDING, getDefaultLeftPadding()));
+        mRightPad = convertToDip(Settings.System.getInt(mContext.getContentResolver(), RIGHT_PADDING, getDefaultRightPadding()));
+        mTopPad = convertToDip(Settings.System.getInt(mContext.getContentResolver(), TOP_PADDING, getDefaultTopPadding()));
+    }
 }
