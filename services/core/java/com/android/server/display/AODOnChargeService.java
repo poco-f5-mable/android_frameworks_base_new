@@ -103,11 +103,13 @@ public class AODOnChargeService extends SystemService {
             Intent batteryStatus = mContext.registerReceiver(null, 
                 new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (isServiceEnabled() && batteryStatus != null 
-                && isCharging(batteryStatus) && isPluggedIn(batteryStatus)) {
+                && isCharging(batteryStatus) && isPluggedIn(batteryStatus) 
+                && !mIsAODStateModifiedByService) {
                 // reset AOD state on boot if service is enabled
                 Settings.Secure.putInt(mContext.getContentResolver(), 
                     Settings.Secure.DOZE_ALWAYS_ON, 0);
                 mIsAODStateModifiedByService = true;
+                mAODActive = false;
                 Slog.v(TAG, "Device is plugged in and charging on boot, enabling AOD");
                 mPluggedIn = true;
                 maybeActivateAOD();
