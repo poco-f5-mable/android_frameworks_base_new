@@ -25,13 +25,21 @@ public class RisingSettingsConstants {
     public static final String LEFT_PADDING = "statusbar_left_padding";
     public static final String RIGHT_PADDING = "statusbar_right_padding";
     public static final String TOP_PADDING = "statusbar_top_padding";
+    public static final String STATUS_BAR_SHOW_BATTERY_PERCENT = "status_bar_show_battery_percent";
+    public static final String STATUS_BAR_BATTERY_TEXT_CHARGING = "status_bar_battery_text_charging";
+    public static final String STATUSBAR_BATTERY_BAR = "statusbar_battery_bar";
+    public static final String STATUS_BAR_LOGO_POSITION = "status_bar_logo_position";
 
     public static final String[] SYSTEM_SETTINGS_KEYS = {
         STATUSBAR_CLOCK_CHIP,
         QS_PANEL_TILE_HAPTIC,
         LEFT_PADDING,
         RIGHT_PADDING,
-        TOP_PADDING
+        TOP_PADDING,
+        STATUS_BAR_SHOW_BATTERY_PERCENT,
+        STATUS_BAR_BATTERY_TEXT_CHARGING,
+        STATUSBAR_BATTERY_BAR,
+        STATUS_BAR_LOGO_POSITION
     };
     
     public static final String[] SECURE_SETTINGS_KEYS = {
