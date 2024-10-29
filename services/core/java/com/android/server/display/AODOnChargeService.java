@@ -22,7 +22,6 @@ import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.os.BatteryManager;
 import android.os.PowerManager;
-import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.Slog;
 
@@ -33,31 +32,29 @@ import com.android.server.SystemService;
 public class AODOnChargeService extends SystemService {
     private static final String TAG = "AODOnChargeService";
     private static final String PULSE_ACTION = "com.android.systemui.doze.pulse";
-    private static final int WAKELOCK_TIMEOUT_MS = 3000;
 
     private final Context mContext;
     private final PowerManager mPowerManager;
 
-    private boolean mAODActive = false;
     private boolean mPluggedIn = false;
-    private boolean mIsAODStateModifiedByService = false;
     private boolean mReceiverRegistered = false;
+    private boolean mServiceEnabled = false;
+    private boolean mAODActive = false;
 
     private final BroadcastReceiver mPowerReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action == null || !isServiceEnabled()) return;
-            if (Intent.ACTION_BATTERY_CHANGED.equals(action)) {
-                if (isCharging(intent) && isPluggedIn(intent)) {
-                    Slog.v(TAG, "Device plugged in and charging, enabling AOD");
-                    mPluggedIn = true;
-                    maybeActivateAOD();
-                } else {
-                    Slog.v(TAG, "Device not charging or unplugged, disabling AOD");
+            if (action == null || !mServiceEnabled) return;
+            switch (action) {
+                case Intent.ACTION_BATTERY_CHANGED:
+                    handleBatteryChanged(intent);
+                    break;
+                case Intent.ACTION_POWER_DISCONNECTED:
+                    Slog.v(TAG, "Device unplugged, disabling AOD");
                     mPluggedIn = false;
                     maybeDeactivateAOD();
-                }
+                    break;
             }
         }
     };
@@ -65,16 +62,16 @@ public class AODOnChargeService extends SystemService {
     private final ContentObserver mSettingsObserver = new ContentObserver(null) {
         @Override
         public void onChange(boolean selfChange) {
-            if (isServiceEnabled()) {
+            mServiceEnabled = Settings.System.getInt(mContext.getContentResolver(),
+                    "doze_always_on_charge_mode", 0) != 0;
+            mAODActive = Settings.Secure.getInt(mContext.getContentResolver(),
+                    Settings.Secure.DOZE_ALWAYS_ON, 0) != 0;
+            if (mServiceEnabled) {
                 registerPowerReceiver();
             } else {
                 unregisterPowerReceiver();
-                if (mIsAODStateModifiedByService) {
-                    Settings.Secure.putInt(mContext.getContentResolver(),
-                         Settings.Secure.DOZE_ALWAYS_ON, 0);
-                    mAODActive = false;
-                    mIsAODStateModifiedByService = false;
-                }
+                Settings.Secure.putInt(mContext.getContentResolver(),
+                     Settings.Secure.DOZE_ALWAYS_ON, 0);
             }
         }
     };
@@ -90,29 +87,17 @@ public class AODOnChargeService extends SystemService {
         Slog.v(TAG, "Starting " + TAG);
         publishLocalService(AODOnChargeService.class, this);
         registerSettingsObserver();
-
-        if (isServiceEnabled()) {
-            registerPowerReceiver();
-        }
+        mSettingsObserver.onChange(true);
     }
 
     @Override
     public void onBootPhase(int phase) {
         if (phase == SystemService.PHASE_BOOT_COMPLETED) {
             Slog.v(TAG, "onBootPhase PHASE_BOOT_COMPLETED");
-            Intent batteryStatus = mContext.registerReceiver(null, 
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-            if (isServiceEnabled() && batteryStatus != null 
-                && isCharging(batteryStatus) && isPluggedIn(batteryStatus) 
-                && !mIsAODStateModifiedByService) {
+            if (mServiceEnabled) {
                 // reset AOD state on boot if service is enabled
                 Settings.Secure.putInt(mContext.getContentResolver(), 
                     Settings.Secure.DOZE_ALWAYS_ON, 0);
-                mIsAODStateModifiedByService = true;
-                mAODActive = false;
-                Slog.v(TAG, "Device is plugged in and charging on boot, enabling AOD");
-                mPluggedIn = true;
-                maybeActivateAOD();
             }
         }
     }
@@ -120,6 +105,7 @@ public class AODOnChargeService extends SystemService {
     private void registerPowerReceiver() {
         if (mReceiverRegistered) return;
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         mContext.registerReceiver(mPowerReceiver, filter);
         mReceiverRegistered = true;
     }
@@ -135,54 +121,51 @@ public class AODOnChargeService extends SystemService {
                 Settings.System.getUriFor("doze_always_on_charge_mode"), 
                 true, 
                 mSettingsObserver);
+        mContext.getContentResolver().registerContentObserver(
+                Settings.Secure.getUriFor(Settings.Secure.DOZE_ALWAYS_ON), 
+                true, 
+                mSettingsObserver);
+    }
+
+    private void handleBatteryChanged(Intent intent) {
+        if (isCharging(intent) && isPluggedIn(intent)) {
+            Slog.v(TAG, "Device plugged in and charging, enabling AOD");
+            mPluggedIn = true;
+            maybeActivateAOD();
+        } else {
+            Slog.v(TAG, "Device not charging, disabling AOD");
+            mPluggedIn = false;
+            maybeDeactivateAOD();
+        }
     }
 
     private void maybeActivateAOD() {
-        if (!mAODActive && mPluggedIn) {
+        if (mPluggedIn && !mAODActive) {
             Slog.v(TAG, "Activating AOD due to device being plugged in");
             setAutoAODChargeActive(true);
         }
     }
 
     private void maybeDeactivateAOD() {
-        if (mAODActive && !mPluggedIn) {
+        if (!mPluggedIn && mAODActive) {
             Slog.v(TAG, "Deactivating AOD due to device being unplugged");
             setAutoAODChargeActive(false);
         }
     }
 
     private void setAutoAODChargeActive(boolean activate) {
-        if (!isServiceEnabled()) {
-            if (mIsAODStateModifiedByService) {
-                Settings.Secure.putInt(mContext.getContentResolver(),
-                        Settings.Secure.DOZE_ALWAYS_ON, 0);
-            }
+        if (!mServiceEnabled) {
+            Settings.Secure.putInt(mContext.getContentResolver(),
+                    Settings.Secure.DOZE_ALWAYS_ON, 0);
             return;
         }
-        boolean isAODCurrentlyActive = Settings.Secure.getInt(
-                mContext.getContentResolver(),
-                Settings.Secure.DOZE_ALWAYS_ON, 0) == 1;
-        if (activate && isAODCurrentlyActive && !mIsAODStateModifiedByService) {
+        if (activate && mAODActive) {
             Slog.v(TAG, "AOD is already enabled, skipping activation");
             return;
         }
-        if (!activate && !mIsAODStateModifiedByService) {
-            Slog.v(TAG, "AOD was not modified by this service, skipping de-activation");
-            return;
-        }
-        if (activate) {
-            Settings.Secure.putInt(mContext.getContentResolver(),
-                    Settings.Secure.DOZE_ALWAYS_ON, 1);
-            mAODActive = true;
-            mIsAODStateModifiedByService = true;
-            Slog.v(TAG, "AOD activated by service");
-        } else {
-            Settings.Secure.putInt(mContext.getContentResolver(),
-                    Settings.Secure.DOZE_ALWAYS_ON, 0);
-            mAODActive = false;
-            mIsAODStateModifiedByService = false;
-            Slog.v(TAG, "AOD deactivated by service");
-        }
+        Settings.Secure.putInt(mContext.getContentResolver(),
+                Settings.Secure.DOZE_ALWAYS_ON, activate ? 1 : 0);
+        Slog.v(TAG, activate ? "AOD activated by service" : "AOD deactivated by service");
         handleAODStateChange(activate);
     }
 
@@ -196,11 +179,6 @@ public class AODOnChargeService extends SystemService {
         }
     }
 
-    private boolean isServiceEnabled() {
-        return Settings.System.getInt(mContext.getContentResolver(),
-                "doze_always_on_charge_mode", 0) != 0;
-    }
-    
     private boolean isWakeOnPlugEnabled() {
         return LineageSettings.Global.getInt(mContext.getContentResolver(),
                 LineageSettings.Global.WAKE_WHEN_PLUGGED_OR_UNPLUGGED,
