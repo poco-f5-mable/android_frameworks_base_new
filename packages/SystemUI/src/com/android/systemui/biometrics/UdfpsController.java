@@ -1029,7 +1029,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
         } else {
             Log.v(TAG, "showUdfpsOverlay | the overlay is already showing");
         }
-        if (viewRoot != null) {
+        if (viewRoot != null && viewRoot.getViewRootImpl() != null) {
             viewRoot.getViewRootImpl().notifyRendererOfExpensiveFrame();
         }
     }
