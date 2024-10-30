@@ -226,13 +226,9 @@ public class MediaArtUtils {
         final List<String> remoteMediaSessionLists = new ArrayList<>();
         for (MediaController controller : mediaSessionManager.getActiveSessions(null)) {
             final MediaController.PlaybackInfo pi = controller.getPlaybackInfo();
-            if (pi == null) {
-                continue;
-            }
+            if (pi == null) continue;
             final PlaybackState playbackState = controller.getPlaybackState();
-            if (playbackState == null || playbackState.getState() != PlaybackState.STATE_PLAYING) {
-                continue;
-            }
+            if (playbackState == null || playbackState.getState() != PlaybackState.STATE_PLAYING) continue;
             if (pi.getPlaybackType() == MediaController.PlaybackInfo.PLAYBACK_TYPE_REMOTE) {
                 if (localController != null && TextUtils.equals(localController.getPackageName(), controller.getPackageName())) {
                     localController = null;
@@ -414,22 +410,15 @@ public class MediaArtUtils {
     }
 
     private boolean sameSessions(MediaController a, MediaController b) {
-        if (a == b) {
-            return true;
-        }
-        if (a == null) {
-            return false;
-        }
+        if (a == b) return true;
+        if (a == null) return false;
         return a.controlsSameSession(b);
     }
 
     private int getMediaControllerPlaybackState(MediaController controller) {
-        if (controller != null) {
-            final PlaybackState playbackState = controller.getPlaybackState();
-            if (playbackState != null) {
-                return playbackState.getState();
-            }
-        }
+        if (controller == null)  return PlaybackState.STATE_NONE;
+        final PlaybackState playbackState = controller.getPlaybackState();
+        if (playbackState != null) return playbackState.getState();
         return PlaybackState.STATE_NONE;
     }
     
@@ -437,9 +426,12 @@ public class MediaArtUtils {
         mStatusBarStateController.removeCallback(mStatusBarStateListener);
         mKeyguardStateController.removeCallback(mKeyguardStateCallback);
         mContext.getContentResolver().unregisterContentObserver(mMediaArtObserver);
-        if (mController != null) {
-            mController.unregisterCallback(mMediaCallback);
-            mController = null;
-        }
+        currLayeredDrawable = null;
+        mMediaMetadata = null;
+        mPreviousMediaMetadata = null;
+        mExecutor.shutdown();
+        if (mController == null) return;
+        mController.unregisterCallback(mMediaCallback);
+        mController = null;
     }
 }
