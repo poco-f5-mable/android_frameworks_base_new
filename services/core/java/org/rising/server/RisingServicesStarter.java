@@ -22,6 +22,9 @@ public class RisingServicesStarter {
 
     private final SystemServiceManager mSystemServiceManager;
 
+    private static final String QUICKSWITCH_SERVICE_CLASS =
+            "org.rising.server.QuickSwitchService";
+
     private static final String SOUND_ENGINE_SERVICE_CLASS =
             "org.rising.server.SoundEngineService";
 
@@ -31,6 +34,7 @@ public class RisingServicesStarter {
 
     public void startAllServices() {
         startService(SOUND_ENGINE_SERVICE_CLASS);
+        startService(QUICKSWITCH_SERVICE_CLASS);
     }
 
     private void startService(String serviceClassName) {

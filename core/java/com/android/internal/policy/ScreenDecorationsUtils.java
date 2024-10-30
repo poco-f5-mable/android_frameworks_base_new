@@ -39,6 +39,10 @@ public class ScreenDecorationsUtils {
      * default display.
      */
     public static float getWindowCornerRadius(Context context) {
+        String callingPackage = context.getPackageManager().getNameForUid(android.os.Binder.getCallingUid());
+        if ("com.google.android.apps.nexuslauncher".equals(callingPackage)) {
+            return 0f;
+        }
         final Resources resources = context.getResources();
         if (!supportsRoundedCornersOnWindows(resources)) {
             return 0f;
