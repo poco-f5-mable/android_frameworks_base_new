@@ -2043,11 +2043,11 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
     
     private void boostFrames() {
         View viewRoot = (mView != null) ? mView.getRootView() : null;
-        if (viewRoot != null) {
+        if (viewRoot != null && viewRoot.getViewRootImpl() != null) {
             viewRoot.getViewRootImpl().notifyRendererOfExpensiveFrame();
         }
         this.mView.requestLayout();
-        if (viewRoot != null) {
+        if (viewRoot != null && viewRoot.getViewRootImpl() != null) {
             viewRoot.getViewRootImpl().notifyRendererOfExpensiveFrame();
         }
     }
