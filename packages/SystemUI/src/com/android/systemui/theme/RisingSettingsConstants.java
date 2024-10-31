@@ -29,6 +29,7 @@ public class RisingSettingsConstants {
     public static final String STATUS_BAR_BATTERY_TEXT_CHARGING = "status_bar_battery_text_charging";
     public static final String STATUSBAR_BATTERY_BAR = "statusbar_battery_bar";
     public static final String STATUS_BAR_LOGO_POSITION = "status_bar_logo_position";
+    public static final String SETTINGS_ICON_STYLE = "settings_icon_style";
 
     public static final String[] SYSTEM_SETTINGS_KEYS = {
         STATUSBAR_CLOCK_CHIP,
@@ -39,7 +40,8 @@ public class RisingSettingsConstants {
         STATUS_BAR_SHOW_BATTERY_PERCENT,
         STATUS_BAR_BATTERY_TEXT_CHARGING,
         STATUSBAR_BATTERY_BAR,
-        STATUS_BAR_LOGO_POSITION
+        STATUS_BAR_LOGO_POSITION,
+        SETTINGS_ICON_STYLE
     };
     
     public static final String[] SECURE_SETTINGS_KEYS = {
