@@ -189,14 +189,22 @@ public class AODStyle extends RelativeLayout implements TunerService.Tunable {
 
     private void loadAodImage() {
         if (mAodImageView == null || mCurrImagePath == null || mCurrImagePath.isEmpty() || mImageLoaded) return;
+        Bitmap bitmap = null;
         try {
-            Bitmap bitmap = BitmapFactory.decodeFile(mCurrImagePath);
+            bitmap = BitmapFactory.decodeFile(mCurrImagePath);
             if (bitmap != null) {
-                Drawable roundedImg = new CircleFramedDrawable(bitmap, 
-                    (int) mContext.getResources().getDimension(R.dimen.custom_aod_image_size));
-                mAodImageView.setImageDrawable(roundedImg);
-                bitmap.recycle();
-                mImageLoaded = true;
+                int targetSize = (int) mContext.getResources().getDimension(R.dimen.custom_aod_image_size);
+                Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetSize, targetSize, true);
+                try (java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream()) {
+                    scaledBitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 90, stream);
+                    byte[] byteArray = stream.toByteArray();
+                    Bitmap compressedBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                    Drawable roundedImg = new CircleFramedDrawable(compressedBitmap, targetSize);
+                    mAodImageView.setImageDrawable(roundedImg);
+                    scaledBitmap.recycle();
+                    compressedBitmap.recycle();
+                    mImageLoaded = true;
+                }
             } else {
                 mImageLoaded = false;
                 mAodImageView.setVisibility(View.GONE);
@@ -204,6 +212,10 @@ public class AODStyle extends RelativeLayout implements TunerService.Tunable {
         } catch (Exception e) {
             mImageLoaded = false;
             mAodImageView.setVisibility(View.GONE);
+        } finally {
+            if (bitmap != null) {
+                bitmap.recycle();
+            }
         }
     }
 }
