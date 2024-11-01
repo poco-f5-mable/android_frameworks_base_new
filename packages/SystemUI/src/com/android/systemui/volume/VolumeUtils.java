@@ -28,13 +28,24 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import com.android.systemui.Dependency;
 import com.android.systemui.res.R;
+import com.android.systemui.tuner.TunerService;
 
 import com.android.internal.util.android.ThemeUtils;
 import com.android.internal.util.android.VibrationUtils;
 
-public class VolumeUtils {
+public class VolumeUtils implements TunerService.Tunable {
     private static final String TAG = "VolumeUtils";
+
+    public static final String CUSTOM_VOLUME_STYLES =
+            "system:" + "custom_volume_styles";
+
+    public static final String VOLUME_SOUND_HAPTICS =
+            "system:" + "volume_sound_haptics";
+
+    public static final String VOLUME_SLIDER_HAPTICS_INTENSITY =
+            "system:" + "volume_slider_haptics_intensity";
 
     private static final String VOLUME_STYLE_CATEGORY = "android.theme.customization.volume_panel";
     private static final String VOLUME_STYLE_OVERLAY_TARGET_PKG = "com.android.systemui";
@@ -53,9 +64,11 @@ public class VolumeUtils {
     private Handler mHandler;
     private final ThemeUtils mThemeUtils;
     
+    private boolean mSoundHapticsEnabled = false;
+    
     private int mVolumeStyle = 0;
     
-    private boolean mSoundHapticsEnabled = false;
+    private final TunerService mTunerService;
 
     private static final int[] seekbarDrawables = {
             R.drawable.volume_row_seekbar,
@@ -73,23 +86,33 @@ public class VolumeUtils {
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setOnCompletionListener(mp -> stopPlayback());
         mThemeUtils = ThemeUtils.getInstance(context);
+        mTunerService = Dependency.get(TunerService.class);
+        mTunerService.addTunable(this,
+                CUSTOM_VOLUME_STYLES, 
+                VOLUME_SOUND_HAPTICS,
+                VOLUME_SLIDER_HAPTICS_INTENSITY);
+    }
+    
+    @Override
+    public void onTuningChanged(String key, String newValue) {
+        switch (key) {
+            case CUSTOM_VOLUME_STYLES:
+                mVolumeStyle = TunerService.parseInteger(newValue, 2);
+                updateVolumeStyleOverlay();
+                break;
+            case VOLUME_SOUND_HAPTICS:
+                mSoundHapticsEnabled = TunerService.parseIntegerSwitch(newValue, false);
+                break;
+            case VOLUME_SLIDER_HAPTICS_INTENSITY:
+                mVolHapticsIntensity = TunerService.parseInteger(newValue, 1);
+                break;
+            default:
+                break;
+        }
     }
 
     public int getRowDrawable() {
         return seekbarDrawables[mVolumeStyle];
-    }
-    
-    public void setVolumeStyle(int volumeStyle) {
-        mVolumeStyle = volumeStyle;
-        updateVolumeStyleOverlay();
-    }
-    
-    public void setSoundsHapticsEnabled(boolean enabled) {
-        mSoundHapticsEnabled = enabled;
-    }
-    
-    public void setVolHapticsIntensity(int intensity) {
-        mVolHapticsIntensity = intensity;
     }
     
     private void updateVolumeStyleOverlay() {
@@ -187,6 +210,7 @@ public class VolumeUtils {
     }
 
     public void onDestroy() {
+        mTunerService.removeTunable(this);
         if (mMediaPlayer != null) {
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.stop();
