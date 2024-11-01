@@ -70,8 +70,6 @@ public class AODOnChargeService extends SystemService {
                 registerPowerReceiver();
             } else {
                 unregisterPowerReceiver();
-                Settings.Secure.putInt(mContext.getContentResolver(),
-                     Settings.Secure.DOZE_ALWAYS_ON, 0);
             }
         }
     };
@@ -155,8 +153,6 @@ public class AODOnChargeService extends SystemService {
 
     private void setAutoAODChargeActive(boolean activate) {
         if (!mServiceEnabled) {
-            Settings.Secure.putInt(mContext.getContentResolver(),
-                    Settings.Secure.DOZE_ALWAYS_ON, 0);
             return;
         }
         if (activate && mAODActive) {
