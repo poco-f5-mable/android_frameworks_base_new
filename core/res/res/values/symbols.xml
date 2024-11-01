@@ -22,6 +22,7 @@
        Can be referenced in java code as: com.android.internal.R.<type>.<name>
        and in layout xml as: "@*android:<type>/<name>"
   -->
+  <java-symbol type="integer" name="config_maxBitmapSizePx" />
   <java-symbol type="array" name="config_key_ec_private" />
   <java-symbol type="array" name="config_key_rsa_private" />
   <java-symbol type="array" name="config_cert_ec" />

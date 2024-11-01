@@ -976,13 +976,23 @@ public final class MediaMetadata implements Parcelable {
         }
 
         private Bitmap scaleBitmap(Bitmap bmp, int maxDimension) {
+            if (bmp == null) {
+                return null;
+            }
             float maxDimensionF = maxDimension;
             float widthScale = maxDimensionF / bmp.getWidth();
             float heightScale = maxDimensionF / bmp.getHeight();
             float scale = Math.min(widthScale, heightScale);
             int height = (int) (bmp.getHeight() * scale);
             int width = (int) (bmp.getWidth() * scale);
-            return Bitmap.createScaledBitmap(bmp, width, height, true);
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bmp, width, height, true);
+            java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+            scaledBitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 80, outputStream);
+            byte[] compressedData = outputStream.toByteArray();
+            Bitmap compressedBitmap = BitmapFactory.decodeByteArray(compressedData, 0, compressedData.length);
+            scaledBitmap.recycle();
+            bmp.recycle();
+            return compressedBitmap;
         }
     }
 }
