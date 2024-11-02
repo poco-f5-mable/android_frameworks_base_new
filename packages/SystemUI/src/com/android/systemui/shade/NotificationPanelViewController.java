@@ -383,7 +383,7 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
     /** The current squish amount for the predictive back animation */
     private float mCurrentBackProgress = 0.0f;
     @Deprecated
-    private KeyguardBottomAreaView mKeyguardBottomArea;
+    public KeyguardBottomAreaView mKeyguardBottomArea;
     private boolean mExpanding;
     private boolean mSplitShadeEnabled;
     /** The bottom padding reserved for elements of the keyguard measuring notifications. */
@@ -1613,6 +1613,10 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
             mNotificationStackScrollLayoutController.setMaxDisplayedNotifications(-1);
             mNotificationStackScrollLayoutController.setKeyguardBottomPaddingForDebug(-1f);
         }
+    }
+
+    public void updateMaxDisplayedNotificationsWrapper(boolean recompute) {
+        updateMaxDisplayedNotifications(recompute);
     }
 
     private boolean shouldAvoidChangingNotificationsCount() {
@@ -3357,6 +3361,13 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
         mNotificationStackScrollLayoutController.setPulsing(pulsing, animatePulse);
 
         updateKeyguardStatusViewAlignment(/* animate= */ true);
+    }
+
+    public void setAmbientIndicationBottomPadding(int bottomPadding) {
+        mAmbientIndicationBottomPadding = bottomPadding;
+    }
+    public int getAmbientIndicationBottomPadding() {
+        return mAmbientIndicationBottomPadding;
     }
 
     @Override
@@ -5473,6 +5484,15 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
             }
             return super.performAccessibilityAction(host, action, args);
         }
+    }
+    
+    @Override
+    public NotificationStackScrollLayoutController getScrollerLayoutController() {
+        return mNotificationStackScrollLayoutController;
+    }
+    @Override
+    public KeyguardBottomAreaView getKeyguardBottomAreaView() {
+        return mKeyguardBottomArea;
     }
 }
 
