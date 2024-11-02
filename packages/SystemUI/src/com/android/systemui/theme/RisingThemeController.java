@@ -26,12 +26,20 @@ import android.widget.Toast;
 
 import com.android.systemui.res.R;
 
+import lineageos.providers.LineageSettings;
+
 public class RisingThemeController {
 
     private static final String TAG = "RisingThemeController";
+
+    private static final int TYPE_SECURE = 0;
+    private static final int TYPE_SYSTEM = 1;
+    private static final int TYPE_LINEAGE_SYSTEM = 2;
+    private static final int TYPE_LINEAGE_SECURE = 3;
+
     private final ContentResolver mContentResolver;
     private final Handler mBackgroundHandler;
-    private Context mContext;
+    private final Context mContext;
 
     public RisingThemeController(Context context, Handler backgroundHandler) {
         this.mContext = context;
@@ -40,13 +48,15 @@ public class RisingThemeController {
     }
 
     public void observeSettings(Runnable reevaluateSystemThemeCallback) {
-        observeSettingsKeys(RisingSettingsConstants.SYSTEM_SETTINGS_KEYS, reevaluateSystemThemeCallback, true);
-        observeSettingsKeys(RisingSettingsConstants.SECURE_SETTINGS_KEYS, reevaluateSystemThemeCallback, false);
-        observeSettingsKeys(RisingSettingsConstants.SYSTEM_SETTINGS_NOTIFY_ONLY_KEYS, null, true);
-        observeSettingsKeys(RisingSettingsConstants.SECURE_SETTINGS_NOTIFY_ONLY_KEYS, null, false);
+        observeSettingsKeys(RisingSettingsConstants.LINEAGE_SECURE_SETTINGS_KEYS, reevaluateSystemThemeCallback, TYPE_LINEAGE_SECURE);
+        observeSettingsKeys(RisingSettingsConstants.LINEAGE_SYSTEM_SETTINGS_KEYS, reevaluateSystemThemeCallback, TYPE_LINEAGE_SYSTEM);
+        observeSettingsKeys(RisingSettingsConstants.SYSTEM_SETTINGS_KEYS, reevaluateSystemThemeCallback, TYPE_SYSTEM);
+        observeSettingsKeys(RisingSettingsConstants.SECURE_SETTINGS_KEYS, reevaluateSystemThemeCallback, TYPE_SECURE);
+        observeSettingsKeys(RisingSettingsConstants.SYSTEM_SETTINGS_NOTIFY_ONLY_KEYS, null, TYPE_SYSTEM);
+        observeSettingsKeys(RisingSettingsConstants.SECURE_SETTINGS_NOTIFY_ONLY_KEYS, null, TYPE_SECURE);
         observeRestartKey();
     }
-    
+
     private void observeRestartKey() {
         Uri restartUri = Settings.System.getUriFor("system_ui_restart");
         observe(restartUri, () -> {
@@ -54,10 +64,32 @@ public class RisingThemeController {
         });
     }
 
-    private void observeSettingsKeys(String[] keys, Runnable reevaluateSystemThemeCallback, boolean isSystem) {
+    private void observeSettingsKeys(String[] keys, Runnable reevaluateSystemThemeCallback, int type) {
+        Uri settingsUri = null;
+
         for (String key : keys) {
-            Uri uri = isSystem ? Settings.System.getUriFor(key) : Settings.Secure.getUriFor(key);
-            observe(uri, reevaluateSystemThemeCallback);
+            switch (type) {
+                case TYPE_SECURE:
+                    settingsUri = Settings.Secure.getUriFor(key);
+                    break;
+                case TYPE_SYSTEM:
+                    settingsUri = Settings.System.getUriFor(key);
+                    break;
+                case TYPE_LINEAGE_SYSTEM:
+                    settingsUri = LineageSettings.System.getUriFor(key);
+                    break;
+                case TYPE_LINEAGE_SECURE:
+                    settingsUri = LineageSettings.Secure.getUriFor(key);
+                    break;
+                default:
+                    Log.e(TAG, "Unknown type for key: " + key);
+                    continue;
+            }
+            if (settingsUri != null) {
+                observe(settingsUri, reevaluateSystemThemeCallback);
+            } else {
+                Log.e(TAG, "Failed to get URI for key: " + key);
+            }
         }
     }
 
@@ -78,7 +110,7 @@ public class RisingThemeController {
             };
             mContentResolver.registerContentObserver(uri, false, contentObserver);
         } else {
-            Log.e(TAG, "Failed to get URI for key");
+            Log.e(TAG, "Failed to get URI for observing");
         }
     }
 
