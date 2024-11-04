@@ -32,6 +32,8 @@ public class RisingSettingsConstants {
     public static final String STATUS_BAR_LOGO_POSITION = "status_bar_logo_position";
     public static final String SETTINGS_ICON_STYLE = "settings_icon_style";
     public static final String SEARCH_BAR_STYLE = "search_bar_style";
+    public static final String QS_TILE_LABEL_HIDE = "qs_tile_label_hide";
+    public static final String QS_TILE_VERTICAL_LAYOUT = "qs_tile_vertical_layout";
 
     public static final String[] SYSTEM_SETTINGS_KEYS = {
         STATUSBAR_CLOCK_CHIP,
@@ -44,7 +46,9 @@ public class RisingSettingsConstants {
         STATUSBAR_BATTERY_BAR,
         STATUS_BAR_LOGO_POSITION,
         SETTINGS_ICON_STYLE,
-        SEARCH_BAR_STYLE
+        SEARCH_BAR_STYLE,
+        QS_TILE_LABEL_HIDE,
+        QS_TILE_VERTICAL_LAYOUT
     };
     
     public static final String[] SECURE_SETTINGS_KEYS = {
