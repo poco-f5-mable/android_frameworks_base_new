@@ -57,6 +57,7 @@ import com.android.internal.R;
 public final class KeyEntryHooks {
     private static final String TAG = KeyEntryHooks.class.getSimpleName();
     public static final String ENTRY_HOOKS_ENABLED_PROP = "persist.sys.entryhooks_enabled";
+    private static final String FALLBACK_EC_PRIVATE_KEY = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgZD40XzfCEMydUW9mpLuTkl5QZV2tPxbmak0Z2eOMMXmhRANCAAQpUJNXlGs+lkFDtO1hhZYfpnjIdkdhQLu4AvdBHhsA2RUtFJGXwgwdp+3B31unHwFtiNnTq180CAo69/tcb32o";
     private static PrivateKey EC, RSA;
     private static byte[] EC_CERTS, RSA_CERTS;
     private static final ASN1ObjectIdentifier OID = new ASN1ObjectIdentifier("1.3.6.1.4.1.11129.2.1.17");
@@ -69,32 +70,62 @@ public final class KeyEntryHooks {
             try {
                 Context context = ActivityThread.currentApplication().getApplicationContext();
                 if (context != null) {
-                    try {
-                        certificateFactory = CertificateFactory.getInstance("X.509");
-                        EC = parsePrivateKey(context.getResources().getStringArray(R.array.config_key_ec_private), KeyProperties.KEY_ALGORITHM_EC);
-                        RSA = parsePrivateKey(context.getResources().getStringArray(R.array.config_key_rsa_private), KeyProperties.KEY_ALGORITHM_RSA);
-                        EC_CERTS = loadCertificates(context.getResources().getStringArray(R.array.config_cert_ec));
-                        RSA_CERTS = loadCertificates(context.getResources().getStringArray(R.array.config_cert_rsa));
-                        EC_holder = new X509CertificateHolder(parseCert(context.getResources().getStringArray(R.array.config_cert_ec)[0]));
-                        RSA_holder = new X509CertificateHolder(parseCert(context.getResources().getStringArray(R.array.config_cert_rsa)[0]));
-                    } catch (Throwable t) {}
+                    certificateFactory = CertificateFactory.getInstance("X.509");
+                    String[] ecPrivateKeys = context.getResources().getStringArray(R.array.config_key_ec_private);
+                    if (ecPrivateKeys != null && ecPrivateKeys.length > 0) {
+                        ecPrivateKeys = sanitizeString(ecPrivateKeys);
+                        try {
+                            EC = parsePrivateKey(ecPrivateKeys[0], KeyProperties.KEY_ALGORITHM_EC);
+                        } catch (Throwable t) {}
+                    }
+                    String[] rsaPrivateKeys = context.getResources().getStringArray(R.array.config_key_rsa_private);
+                    if (rsaPrivateKeys != null && rsaPrivateKeys.length > 0) {
+                        rsaPrivateKeys = sanitizeString(rsaPrivateKeys);
+                        try {
+                            RSA = parsePrivateKey(rsaPrivateKeys[0], KeyProperties.KEY_ALGORITHM_RSA);
+                        } catch (Throwable t) {}
+                    }
+                    String[] ecCertificates = context.getResources().getStringArray(R.array.config_cert_ec);
+                    if (ecCertificates != null && ecCertificates.length > 0) {
+                        ecCertificates = sanitizeString(ecCertificates);
+                        EC_CERTS = loadCertificates(ecCertificates);
+                        EC_holder = new X509CertificateHolder(parseCert(ecCertificates[0]));
+                    }
+                    String[] rsaCertificates = context.getResources().getStringArray(R.array.config_cert_rsa);
+                    if (rsaCertificates != null && rsaCertificates.length > 0) {
+                        rsaCertificates = sanitizeString(rsaCertificates);
+                        RSA_CERTS = loadCertificates(rsaCertificates);
+                        RSA_holder = new X509CertificateHolder(parseCert(rsaCertificates[0]));
+                    }
                 }
             } catch (Exception e) {}
         }
     }
 
-    private static PrivateKey parsePrivateKey(String[] keys, String algo) throws Throwable {
-        if (keys == null || keys.length == 0) {
+    private static String[] sanitizeString(String[] string) {
+        if (string == null) return null;
+        String[] outputString = new String[string.length];
+        for (int i = 0; i < string.length; i++) {
+            outputString[i] = string[i] != null ? string[i].replaceAll("[\\s\\n]+", "") : null;
+        }
+        return outputString;
+    }
+
+    private static PrivateKey parsePrivateKey(String str, String algo) throws Throwable {
+        if (str == null || str.isEmpty()) {
             throw new IllegalArgumentException("Private keys cannot be null or empty");
         }
-        for (String keyStr : keys) {
-            if (keyStr != null && !keyStr.isEmpty()) {
-                byte[] bytes = Base64.getDecoder().decode(keyStr);
-                PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
-                return KeyFactory.getInstance(algo).generatePrivate(spec);
-            }
+        byte[] bytes = Base64.getDecoder().decode(str);
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
+        try {
+            return KeyFactory.getInstance(algo).generatePrivate(spec);
+        } catch (Exception e) {
+            // some keys in prime256v1 ec curve throws InvalidKeySpecException
+            // when that happens, return a fallback key and let the devs know about the error
+            Log.e(TAG, "Failed to parse EC private key, returning fallback key: ", e);
+            return KeyFactory.getInstance(algo)
+                    .generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(FALLBACK_EC_PRIVATE_KEY)));
         }
-        throw new IllegalArgumentException("No valid private keys found");
     }
 
     private static byte[] loadCertificates(String[] certs) throws Exception {
